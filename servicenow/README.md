@@ -1,13 +1,118 @@
-# my-plugin
+# Servicenow Plugin 
 
-Welcome to the my-plugin plugin!
 
-_This plugin was created through the Backstage CLI_
+App.tsx should look like the following 
 
-## Getting started
+import { Navigate, Route } from 'react-router-dom';
+import { apiDocsPlugin, ApiExplorerPage } from '@backstage/plugin-api-docs';
+import {
+  CatalogEntityPage,
+  CatalogIndexPage,
+  catalogPlugin,
+} from '@backstage/plugin-catalog';
+import {
+  CatalogImportPage,
+  catalogImportPlugin,
+} from '@backstage/plugin-catalog-import';
+import { ScaffolderPage, scaffolderPlugin } from '@backstage/plugin-scaffolder';
+import { orgPlugin } from '@backstage/plugin-org';
+import { SearchPage } from '@backstage/plugin-search';
+import {
+  TechDocsIndexPage,
+  techdocsPlugin,
+  TechDocsReaderPage,
+} from '@backstage/plugin-techdocs';
+import { TechDocsAddons } from '@backstage/plugin-techdocs-react';
+import { ReportIssue } from '@backstage/plugin-techdocs-module-addons-contrib';
+import { UserSettingsPage } from '@backstage/plugin-user-settings';
+import { apis } from './apis';
+import { entityPage } from './components/catalog/EntityPage';
+import { searchPage } from './components/search/SearchPage';
+import { Root } from './components/Root';
 
-Your plugin has been added to the example app in this repository, meaning you'll be able to access it by running `yarn start` in the root directory, and then navigating to [/my-plugin](http://localhost:3000/my-plugin).
+import {
+  AlertDisplay,
+  OAuthRequestDialog,
+  SignInPage,
+} from '@backstage/core-components';
+import { createApp } from '@backstage/app-defaults';
+import { AppRouter, FlatRoutes } from '@backstage/core-app-api';
+import { CatalogGraphPage } from '@backstage/plugin-catalog-graph';
+import { RequirePermission } from '@backstage/plugin-permission-react';
+import { catalogEntityCreatePermission } from '@backstage/plugin-catalog-common/alpha';
+import { ServiceNowPage } from '@internal/plugin-my-plugin';
 
-You can also serve the plugin in isolation by running `yarn start` in the plugin directory.
-This method of serving the plugin provides quicker iteration speed and a faster startup and hot reloads.
-It is only meant for local development, and the setup for it can be found inside the [/dev](./dev) directory.
+const app = createApp({
+  apis,
+  bindRoutes({ bind }) {
+    bind(catalogPlugin.externalRoutes, {
+      createComponent: scaffolderPlugin.routes.root,
+      viewTechDoc: techdocsPlugin.routes.docRoot,
+      createFromTemplate: scaffolderPlugin.routes.selectedTemplate,
+    });
+    bind(apiDocsPlugin.externalRoutes, {
+      registerApi: catalogImportPlugin.routes.importPage,
+    });
+    bind(scaffolderPlugin.externalRoutes, {
+      registerComponent: catalogImportPlugin.routes.importPage,
+      viewTechDoc: techdocsPlugin.routes.docRoot,
+    });
+    bind(orgPlugin.externalRoutes, {
+      catalogIndex: catalogPlugin.routes.catalogIndex,
+    });
+  },
+  components: {
+    SignInPage: props => <SignInPage {...props} auto providers={['guest']} />,
+  },
+});
+
+const routes = (
+  <FlatRoutes>
+    <Route path="/" element={<Navigate to="catalog" />} />
+    <Route path="/catalog" element={<CatalogIndexPage />} />
+    <Route
+      path="/catalog/:namespace/:kind/:name"
+      element={<CatalogEntityPage />}
+    >
+      {entityPage}
+    </Route>
+    <Route path="/docs" element={<TechDocsIndexPage />} />
+    <Route
+      path="/docs/:namespace/:kind/:name/*"
+      element={<TechDocsReaderPage />}
+    >
+      <TechDocsAddons>
+        <ReportIssue />
+      </TechDocsAddons>
+    </Route>
+    <Route path="/create" element={<ScaffolderPage />} />
+    <Route path="/api-docs" element={<ApiExplorerPage />} />
+    <Route
+      path="/catalog-import"
+      element={
+        <RequirePermission permission={catalogEntityCreatePermission}>
+          <CatalogImportPage />
+        </RequirePermission>
+      }
+    />
+    <Route path="/search" element={<SearchPage />}>
+      {searchPage}
+    </Route>
+    <Route path="/settings" element={<UserSettingsPage />} />
+    <Route path="/catalog-graph" element={<CatalogGraphPage />} />
+    <Route path="/my-plugin" element={<ServiceNowPage />} />
+  </FlatRoutes>
+);
+
+export default app.createRoot(
+  <>
+    <AlertDisplay />
+    <OAuthRequestDialog />
+    <AppRouter>
+      <Root>{routes}</Root>
+    </AppRouter>
+  </>,
+);
+
+
+
