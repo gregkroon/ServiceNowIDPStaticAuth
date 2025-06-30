@@ -1,6 +1,6 @@
 # Servicenow Plugin 
 
-
+```
 App.tsx should look like the following 
 
 import { Navigate, Route } from 'react-router-dom';
@@ -114,5 +114,5 @@ export default app.createRoot(
   </>,
 );
 
-
+```
 
