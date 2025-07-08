@@ -18,7 +18,7 @@ const EntityServiceNowContent = myPluginPlugin.provide(
   createComponentExtension({
     name: "EntityServiceNowContent",
     component: {
-      lazy: () => import('./components/ServiceNowPage.esm.js').then((m) => m.ServiceNowPage)
+      lazy: () => import('./components/ServiceNowEntityWidget.esm.js').then((m) => m.ServiceNowEntityWidget)
     }
   })
 );

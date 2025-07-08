@@ -26,7 +26,7 @@ export const EntityServiceNowContent = myPluginPlugin.provide(
     name: 'EntityServiceNowContent',
     component: {
       lazy: () =>
-        import('./components/ServiceNowPage').then(m => m.ServiceNowPage),
+        import('./components/ServiceNowEntityWidget').then(m => m.ServiceNowEntityWidget),
     },
   }),
 );

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'; // FIX: Added import for React and useState
+import { useState } from 'react';
 import {
   Grid,
   TextField,
@@ -11,21 +11,19 @@ import {
   Content,
   Header,
   Page,
-  InfoCard, // FIX: Added import for InfoCard
+  InfoCard,
 } from '@backstage/core-components';
-import { ServiceNowWidget } from './ServiceNowWidget';
+import { ServiceNowStandaloneWidget } from './ServiceNowStandaloneWidget';
 
 export const ServiceNowPage = () => {
-  // State for the filter values is managed here in the parent page
   const [descriptionFilter, setDescriptionFilter] = useState('');
-  const [stateFilter, setStateFilter] = useState('active=true'); // Default filter
+  const [stateFilter, setStateFilter] = useState('active=true');
 
   return (
     <Page themeId="tool">
       <Header title="ServiceNow Incident Dashboard" />
       <Content>
         <Grid container spacing={3} direction="column">
-          {/* Section for the filter controls */}
           <Grid item>
             <InfoCard title="Filters">
               <Grid container spacing={2}>
@@ -34,7 +32,6 @@ export const ServiceNowPage = () => {
                     fullWidth
                     label="Search Description"
                     variant="outlined"
-                    // Use a debounce here in a real scenario to avoid excessive API calls
                     onChange={e => setDescriptionFilter(e.target.value)}
                   />
                 </Grid>
@@ -57,9 +54,8 @@ export const ServiceNowPage = () => {
             </InfoCard>
           </Grid>
 
-          {/* The Widget is now passed the filter state as props */}
           <Grid item>
-            <ServiceNowWidget
+            <ServiceNowStandaloneWidget
               stateFilter={stateFilter}
               descriptionFilter={descriptionFilter}
             />
