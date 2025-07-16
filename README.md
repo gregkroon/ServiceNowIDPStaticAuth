@@ -74,13 +74,17 @@ To connect through the Backstage proxy, update your `app-config.yaml`:
 proxy:
   endpoints:
     /servicenow:
-      target: https://yourinstance.servicenow.com/
+      target: https://your-servicenow.com/
       headers:
         Authorization: Basic ${SNOW_TOKEN}
         Accept: application/json
         Content-Type: application/json
       pathRewrite:
         api/proxy/servicenow/?: /
+
+customPlugins:
+  servicenow:
+    instanceUrl: https://your-servicenow.com/
 ```
 
 ---
