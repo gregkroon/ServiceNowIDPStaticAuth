@@ -10,7 +10,7 @@ import {
   StatusWarning,
   StatusAborted,
 } from '@backstage/core-components';
-import { useApi, identityApiRef, discoveryApiRef } from '@backstage/core-plugin-api';
+import { useApi, identityApiRef, discoveryApiRef, configApiRef } from '@backstage/core-plugin-api';
 import { useEntity } from '@backstage/plugin-catalog-react';
 import { useAsync } from 'react-use';
 import { Alert } from '@material-ui/lab';
@@ -34,8 +34,8 @@ import {
 } from '@material-ui/core';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 
-const SERVICENOW_INSTANCE_URL = 'https://ven03172.service-now.com';
 const SERVICENOW_CI_SYSID_ANNOTATION = 'servicenow.com/ci-sysid';
+const SERVICENOW_INSTANCE_URL_ANNOTATION = 'servicenow.com/instance-url';
 
 export type Incident = {
   sys_id: string;
@@ -96,6 +96,7 @@ export const ServiceNowEntityWidget = () => {
   const { entity } = useEntity();
   const identityApi = useApi(identityApiRef);
   const discoveryApi = useApi(discoveryApiRef);
+  const configApi = useApi(configApiRef);
 
   const [viewType, setViewType] = useState<ViewType>('incidents');
   const [stateFilter, setStateFilter] = useState('active=true');
@@ -121,6 +122,37 @@ export const ServiceNowEntityWidget = () => {
   }, 500, [descriptionInput]);
 
   const ciSysId = entity.metadata.annotations?.[SERVICENOW_CI_SYSID_ANNOTATION] ?? '';
+
+  // Get ServiceNow instance URL from config API
+  const getServiceNowInstanceUrl = () => {
+    // First try entity annotation (highest priority - entity-specific override)
+    const annotationUrl = entity.metadata.annotations?.[SERVICENOW_INSTANCE_URL_ANNOTATION];
+    if (annotationUrl) {
+      return annotationUrl.replace(/\/$/, '');
+    }
+    
+    // Then try custom plugins config
+    try {
+      const customPluginUrl = configApi.getOptionalString('customPlugins.servicenow.instanceUrl');
+      if (customPluginUrl) {
+        return customPluginUrl.replace(/\/$/, '');
+      }
+    } catch (error) {
+      console.warn('Could not read custom plugin config:', error);
+    }
+    
+    // Then try to read the proxy target directly
+    try {
+      const proxyTarget = configApi.getOptionalString('proxy.endpoints./servicenow.target');
+      if (proxyTarget) {
+        return proxyTarget.replace(/\/$/, '');
+      }
+    } catch (error) {
+      console.warn('Could not read proxy target:', error);
+    }
+    
+    return null;
+  };
 
   const { value, loading, error } = useAsync(
     async (): Promise<{ items: (Incident | Change)[]; totalCount: number } | null> => {
@@ -301,15 +333,25 @@ export const ServiceNowEntityWidget = () => {
         title: 'Number', 
         field: 'number', 
         width: '10%', 
-        render: (rowData: Incident | Change) => (
-          <a 
-            href={`${SERVICENOW_INSTANCE_URL}/nav_to.do?uri=${viewType === 'incidents' ? 'incident' : 'change_request'}.do?sys_id=${rowData.sys_id}`} 
-            target="_blank" 
-            rel="noopener noreferrer"
-          >
-            {rowData.number}
-          </a>
-        ) 
+        render: (rowData: Incident | Change) => {
+          const serviceNowUrl = getServiceNowInstanceUrl();
+          
+          // Only show link if we have a ServiceNow instance URL configured
+          if (serviceNowUrl) {
+            return (
+              <a 
+                href={`${serviceNowUrl}/nav_to.do?uri=${viewType === 'incidents' ? 'incident' : 'change_request'}.do?sys_id=${rowData.sys_id}`} 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
+                {rowData.number}
+              </a>
+            );
+          }
+          
+          // If no URL configured, just show the number as text
+          return <span>{rowData.number}</span>;
+        }
       },
       { title: 'Description', field: 'short_description' },
       { 
