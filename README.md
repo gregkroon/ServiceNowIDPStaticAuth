@@ -106,7 +106,8 @@ customPlugins:
 ## Build notes 
 
 * yarn build
-* yarn pack 
+* yarn pack
+* package.tgz for upload 
 
 
 ---
