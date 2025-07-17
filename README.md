@@ -62,8 +62,10 @@ metadata:
 
 This plugin uses Static Auth with a single account . Upon login:
 
-* Credentials are sourced from teh secret manager 
+* Credentials are sourced from the secret manager
 
+  
+<img width="1027" height="794" alt="image" src="https://github.com/user-attachments/assets/32910374-cf81-44c0-a84f-363050cd5dff" />
 ---
 
 ## 🌐 Proxy and Plugin Configuration
